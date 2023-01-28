@@ -1,0 +1,9 @@
+{% extends "stock/layout.html" %}
+{% load static %}
+{% block body %}
+<div class="container">
+    {% for stock in stocks %}
+    <div><a href="{% url 'stock' stock.id %}">{{stock.name}}</a></div>
+    {% endfor %}
+</div>
+{% endblock %}

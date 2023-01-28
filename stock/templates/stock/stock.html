@@ -1,0 +1,140 @@
+{% extends "stock/layout.html" %}
+{% load static %}
+{% block body %}
+<style>
+.allcharts{
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+}
+
+.thechart{
+    width: 600px;
+}
+form{
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+input{
+  margin-top: 7px;
+}
+</style>
+
+<form class="searchfilter container">
+  {% csrf_token %}
+  <div><input hidden value="{{watchlist.id}}" class="watchvalue"></div>
+  <div><label>Date from</label><input type="date" class="datefrom"></div>
+  <div><label>Date to:</label><input type="date" class="dateto"></div>
+  <div><input type="submit"></div>
+
+</form>
+
+<div class="container allcharts">
+    {% for stock in stocks %}
+<div class="thechart stockheading">
+    <div>{{stock.name}}</div>
+    <canvas class="myChart {{stock.expectedexitprice}} {{stock.symbol}} {{stock.id}}" id="{{stock.expectedtime.isoformat}}"></canvas>
+    <div hidden class="start">{{stock.start.isoformat}}</div>
+    <div hidden class="end">{{stock.end.isoformat}}</div>
+</div>
+{% endfor %}
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>      
+  <script>
+  
+  
+    
+  document.querySelectorAll('.myChart').forEach(ctx => {
+        let d = `${ctx.id[0]}${ctx.id[1]}${ctx.id[2]}${ctx.id[3]}${ctx.id[4]}${ctx.id[5]}${ctx.id[6]}${ctx.id[7]}${ctx.id[8]}${ctx.id[9]}`
+        let y=new Array();
+   let z=new Array();
+   let x= 0;
+        fetch('/api/' + ctx.classList[3]) 
+     .then(response => response.json())
+     .then(data => {
+        let thevalues = Object.values(data)[0]
+        let eachvalue = Object.values(thevalues)[0]
+        let thelast = parseFloat(eachvalue.close)
+        let last = Object.values(thevalues)[Object.values(thevalues).length-1]
+        console.log(Object.values(data.thecurrent)[0].current)
+        for (const [key, value] of Object.entries(thevalues)) {
+            let dd = Date(value.date);
+
+ y.push(value.date);
+//   console.log(Object.values(value)[0])
+ z.push(value.close)
+ if (parseFloat(value.close)> x){
+    x = parseFloat(value.close)
+  //  
+        // 
+    }
+    if (parseFloat(value.close) < thelast){
+        thelast = parseFloat(value.close)
+    }
+    console.log(thelast)
+    // document.querySelector('.highest').innerHTML = x;
+    // document.querySelector('.lowest').innerHTML = thelast;
+    // document.querySelector('.current').innerHTML = last.close;
+ }
+ new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: y,
+      datasets: [
+          {
+        label: '# of Votes',
+        data: z,
+        borderWidth: 1,
+        order: 1,
+      pointRadius:0
+      // `2023-01-03 11:55:00`
+       },
+      {
+          label: 'expected price',
+          data:[{'x': d
+, 'y': ctx.classList[1]} ],
+          type: 'line',
+          order:2
+      }
+      ]
+     }
+  ,
+    options: {
+      scales: {
+        y: {
+          beginAtZero: false
+        }
+      }
+    }
+  });
+  })
+
+        }) 
+        
+        document.addEventListener('DOMContentLoaded',function(){
+          document.querySelector('.searchfilter').addEventListener('submit', function(event){
+        event.preventDefault();
+        
+        let datefrom = document.querySelector('.datefrom').value;
+        let dateto = document.querySelector('.dateto').value;
+
+document.querySelectorAll('.stockheading').forEach(one =>{
+ let stockstart = one.querySelector('.start').innerHTML;
+  let stockend = one.querySelector('.end').innerHTML
+if (datefrom <= stockstart && dateto >= stockend ){
+    one.style.display = ''
+  }
+  else{
+    one.style.display = 'none'
+  }
+
+})
+
+    })
+        })
+  </script>
+ 
+  
+{% endblock %}

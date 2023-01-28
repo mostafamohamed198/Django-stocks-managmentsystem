@@ -1,0 +1,205 @@
+{% extends "stock/layout.html" %}
+{% load static %}
+{% block body %}
+<style>
+    .allwatch{
+        margin-top: 30px;
+        display: flex;
+    }
+    table, tr{
+    margin-top: 30px;
+    width: 100%;
+  background-color: white;
+
+  }
+  th{
+    background-color: #0dbaff;
+    color:white;
+    padding:7px;
+  }
+  td{
+    padding:5px;
+  }
+  .watchcontent{
+    width: 25%;
+  }
+  .watchtable{
+    width:70%;
+  }
+
+  .allthepage{
+    display:flex;
+    margin-top: 20px;
+  }
+
+  .searchfilter div{
+    margin:20px;
+  }
+
+  .dropdownbutton{
+        background-color: white;
+        color:#0dbaff;
+        border:none;
+        width: 100%;
+    }
+</style>
+<div class="allthepage">
+<div class="theformdiv">
+    <h2>filter search</h2>
+<form class="searchfilter">
+    {% csrf_token %}
+    <div><input hidden value="{{watchlist.id}}" class="watchvalue"></div>
+    <div><label>Current From:</label><input type="number" class="currentfrom"></div>
+    <div><label>Current to:</label><input type="number" class="currentto"></div>
+    <div><label>Highest from:</label><input type="number" class="highestfrom"></div>
+    <div><label>Highest to:</label><input type="number" class="highestto"></div>
+    <div><label>Lowest from:</label><input type="number" class="lowestfrom"></div>
+    <div><label>Lowest to:</label><input type="number" class="lowestto"></div>
+    <div><label>Date from</label><input type="date" class="datefrom"></div>
+    <div><label>Date to:</label><input type="date" class="dateto"></div>
+    <div><input type="submit"></div>
+
+</form>
+</div>
+<div class="container">
+  <div class="dropdown">
+  <button class="btn btn-default dropdown-toggle" type="button" id="menu1" data-toggle="dropdown">Watchlists
+    <span class="caret"></span></button>
+    <ul class="dropdown-menu men1" role="menu" aria-labelledby="menu1">
+        {% for watchlist in watchlists %}
+      <li role="presentation "><a href='{%url "thewatchlist" watchlist.id%}'><button class='dropdownbutton menb1' id='{{watchlist.id}}'role="menuitem" >{{watchlist.name}}</button></a></li>
+      <li role="presentation" class="divider"></li>
+
+      {% endfor %}
+    </ul>
+  </div>
+    <div class="allwatch">
+        <div class="watchcontent">
+            <h2>{{watchlist.name}}</h2>
+            {% for stock in watchlist.stocks.all %} 
+            <div>{{stock.name}}</div>
+            {% endfor %}
+        </div>
+        <div class="watchtable">
+            <table>
+                <tr>
+                  <th>Name</th>
+                  <th>Current</th>
+                  <th>Highest</th>
+                  <th>Lowest</th>
+                </tr>
+                {% for stock in watchlist.stocks.all %}
+                <tr class="stockheading" id="{{stock.id}}">
+                  <td>{{stock.name}}</td>
+                  <td class="current"></td>
+                  <td class="highest"></td>
+                  <td class="lowest"></td>
+                  <td hidden class="start">{{stock.start.isoformat}}</td>
+                  <td hidden class="end">{{stock.end.isoformat}}</td>
+                </tr>
+                {% endfor %}
+              </table> 
+        </div>
+    </div>
+</div>
+</div>
+<script>
+// fetch('https://newsapi.org/v2/everything?q=google&from=2022-12-16&sortBy=publishedAt&apiKey=4ff0140f52fc49e390a77de5c1aa82d3')
+//     .then(response => response.json())
+//    .then(data => {
+//     console.log(data)
+//    })
+document.addEventListener('DOMContentLoaded', function(){
+let products = {}
+  let dat = []
+document.querySelectorAll('.stockheading').forEach(row =>{
+ let x= 0;
+      fetch('/api/' + row.id) 
+   .then(response => response.json())
+   .then(data => {
+      let thevalues = Object.values(data)[0]
+      let eachvalue = Object.values(thevalues)[0]
+      let thelast = parseFloat(eachvalue.close)
+      let last = Object.values(data.thecurrent)[0].current
+    //   console.log(last)
+      for (const [key, value] of Object.entries(thevalues)) {
+          let dd = Date(value.date);
+
+
+//   console.log(Object.values(value)[0])
+
+if (parseFloat(value.close)> x){
+  x = parseFloat(value.close)
+//  
+      // 
+  }
+  if (parseFloat(value.close) < thelast){
+      thelast = parseFloat(value.close)
+  }
+  
+}
+//   console.log(thelast)
+  row.querySelector('.highest').innerHTML = x;
+  row.querySelector('.lowest').innerHTML = thelast;
+  row.querySelector('.current').innerHTML = last;
+
+//   console.log(row.querySelector('.current').innerHTML)
+  
+  let tee =     {
+      productName: `${row.id}`,
+      highest: `${row.querySelector('.highest').innerHTML}`,
+      lowest: `${row.querySelector('.lowest').innerHTML}`,
+    }
+
+    dat.push(tee)
+    // console.log(dat)
+
+      })  
+    })
+   
+    products['data'] = dat
+    // console.log(products)
+
+    document.querySelector('.searchfilter').addEventListener('submit', function(event){
+        event.preventDefault();
+        // console.log('submitted')
+        let formwatch = document.querySelector('.watchvalue').value;
+        let currentfrom = document.querySelector('.currentfrom').value;
+        let currentto = document.querySelector('.currentto').value
+        let highestfrom = document.querySelector('.highestfrom').value;
+        let highestto = document.querySelector('.highestto').value;
+        let lowestfrom = document.querySelector('.lowestfrom').value;
+        let lowestto = document.querySelector('.lowestto').value;
+        let datefrom = document.querySelector('.datefrom').value;
+        let dateto = document.querySelector('.dateto').value;
+
+document.querySelectorAll('.stockheading').forEach(one =>{
+    let stockhighest = one.querySelector('.highest').innerHTML 
+  let stocklowest = one.querySelector('.lowest').innerHTML 
+  let stockcurrent = one.querySelector('.current').innerHTML
+  let stockstart = one.querySelector('.start').innerHTML;
+  let stockend = one.querySelector('.end').innerHTML
+//   console.log(stockhighest + stocklowest + stockcurrent + stockstart + stockend)
+  if (datefrom <= stockstart && dateto >= stockend && parseFloat(stockcurrent) >= parseFloat(currentfrom) && parseFloat(stockcurrent) <= parseFloat(currentto) && parseFloat(stockhighest) >= parseFloat(highestfrom) && parseFloat(stockhighest) <= parseFloat(highestto) && parseFloat (stocklowest) >= parseFloat(lowestfrom) && parseFloat(stocklowest) <= parseFloat(lowestto) ){
+    // console.log(one.style.display)
+    one.style.display = ''
+  }
+  else{
+    one.style.display = 'none'
+  }
+
+})
+
+    })
+    document.querySelector('#menu1').addEventListener('click',function(){
+        if(document.querySelector('.men1').style.display == 'block'){
+            document.querySelector('.men1').style.display = 'none';  
+        }else{
+            document.querySelector('.men1').style.display = 'block'
+        }
+    })
+    
+})
+
+</script>
+{% endblock %}

@@ -1,0 +1,113 @@
+{% extends "stock/layout.html" %}
+{% load static %}
+{% block body %}
+<style>
+  table, tr{
+    margin-top: 30px;
+    width: 100%;
+  background-color: white;
+
+  }
+  th{
+    background-color: #0dbaff;
+    color:white;
+    padding:7px;
+  }
+  td{
+    padding:5px;
+  }
+.stockbtn{
+  border:none;
+  margin-top: 20px;
+  margin-bottom: 20px;
+  color:white;
+  padding:5px;
+  border-radius: 7px;
+}
+
+.stockform{
+  display: none;
+}
+</style>
+<div class="container">
+<div>
+<button class="stockbtn">Add stock</button>
+  <form action='#' method="post" class="stockform">
+    <h2>Add stock</h2>
+    {% csrf_token %}
+    {{form.as_p}}
+    <input type="submit">
+
+</form>
+<table>
+    <tr>
+      <th>Name</th>
+      <th>Current</th>
+      <th>Highest</th>
+      <th>Lowest</th>
+    </tr>
+    {% for stock in stocks %}
+    <tr class="stockheading" id="{{stock.id}}">
+      <td>{{stock.name}}</td>
+      <td class="current"></td>
+      <td class="highest"></td>
+      <td class="lowest"></td>
+    </tr>
+    {% endfor %}
+  </table> 
+</div>
+<div class="test"></div>
+<script>
+
+  document.addEventListener('DOMContentLoaded', function(){
+
+  document.querySelectorAll('.stockheading').forEach(row =>{
+   let x= 0;
+        fetch('/api/' + row.id) 
+     .then(response => response.json())
+     .then(data => {
+        let thevalues = Object.values(data)[0]
+        let eachvalue = Object.values(thevalues)[0]
+        let thelast = parseFloat(eachvalue.close)
+        let last = Object.values(data.thecurrent)[0].current
+        console.log(last)
+        for (const [key, value] of Object.entries(thevalues)) {
+            let dd = Date(value.date);
+
+
+//   console.log(Object.values(value)[0])
+
+ if (parseFloat(value.close)> x){
+    x = parseFloat(value.close)
+  //  
+        // 
+    }
+    if (parseFloat(value.close) < thelast){
+        thelast = parseFloat(value.close)
+    }
+    console.log(thelast)
+    row.querySelector('.highest').innerHTML = x;
+    row.querySelector('.lowest').innerHTML = thelast;
+    row.querySelector('.current').innerHTML = last;
+ }
+
+        })  
+      })
+  let thestockform = document.querySelector('.stockform')
+  document.querySelector('.stockbtn').addEventListener('click',function(){
+    
+    if (thestockform.style.display == 'block'){
+      thestockform.style.display = 'none'
+    }
+    else{
+      thestockform.style.display = 'block'
+    }
+  })
+  let thetest = document.querySelector('.test')
+
+})
+
+
+
+</script>
+{% endblock %}

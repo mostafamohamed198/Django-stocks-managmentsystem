@@ -1,0 +1,307 @@
+{% extends "stock/layout.html" %}
+{% load static %}
+{% block body %}
+<style>
+    .listname{
+        color:#0dbaff;
+        font-size: 30px;
+        font-weight: 600;
+    }
+
+    .stockname{
+        font-size: 18px;
+    }
+
+    .dropdownbutton{
+        background-color: white;
+        color:#0dbaff;
+        border:none;
+        width: 100%;
+    }
+
+    .watchstock{
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+        align-items: center;
+
+    }
+
+    .watchstock button{
+        border-radius: 5px;
+        border: none;
+        color:white;
+        padding:5px;
+    }
+    .buttonswatch{
+        display: flex;
+        width:500px;
+        position: relative;
+        left:0px;
+       
+    }
+
+    .dropdown-toggle, .addwatchlist{
+    color:white;
+    background-color: #0dbaff;
+    border:none;
+    border-radius: 7px;
+    margin-bottom:25px;
+    margin-top: 25px;
+    margin-left: 10px;
+    height:35px;
+}
+
+.addwatchlistform{
+    display: none;
+}
+
+.thechart{
+    width: 100%;
+    background-color: white;
+}
+
+
+.card{
+    display: none;
+    border:solid red;
+    width:700px
+    
+}
+.thestockinfo{
+    background-color: white;
+    display: flex;
+    justify-content: space-around;
+}
+
+table, th, td {
+    background-color: white;
+    border-radius: 40px;
+ padding:10px;
+  width: 100%;
+
+}
+.cardinfo{
+    width:100%;
+    /* margin-bottom: 30px; */
+    margin-right: 15px;
+    padding:15px;
+    
+}
+
+.listicon{
+    background-color: white;
+    border:none;
+}
+
+.listicon i{
+    color:rgb(0, 29, 78);
+    font-size:18px;
+}
+
+.editform {
+    display: none;
+    margin-bottom: 10px;
+}
+</style>
+
+<div class="container ">
+    <div class="buttonswatch">
+<div class="dropdown">
+    <button class="btn btn-default dropdown-toggle" type="button" id="menu1" data-toggle="dropdown">Watchlists
+    <span class="caret"></span></button>
+    <ul class="dropdown-menu men1" role="menu" aria-labelledby="menu1">
+        {% for watchlist in watchlists %}
+      <li role="presentation "><button class='dropdownbutton menb1' id='{{watchlist.id}}'role="menuitem" >{{watchlist.name}}</button></li>
+      <li role="presentation" class="divider"></li>
+
+      {% endfor %}
+    </ul>
+  </div>
+  <div><button class="addwatchlist">Add watchlist</button></div>
+</div>
+</div>
+  
+<div class="container cardcont">
+    {% for list in watchlists %} 
+    <div class='card'id="{{list.id}}" >
+        <div class="cardinfo">
+        <p class="listname">{{list.name}}   <button class="listicon listedit"><i class="fa-solid fa-pen-to-square"></i></button><button class="listicon listdelete {{list.id}}"><i class="fa-solid fa-trash"></i></button></p>
+        <form action='#'method="post" class="editform">
+            {% csrf_token %}
+            <input hidden value="{{list.id}}" name="oldvalue">
+            <input type="text" name="newvalue">
+            <input type="submit">
+        </form>
+        {% for object in list.stocks.all %} 
+        <div class="watchstock">
+        <p class="stockname">{{object.name}}</p><button class="deletestock {{object.id}} {{list.id}}">Delete</button></div>
+        {% endfor %}
+    </div>
+        <div>
+        <table>
+            <tr>
+              <th>Name</td>
+              <th>Symbol</td>
+              <th>Current Price</td>
+              <th>Add</td>
+            </tr>
+        {% for stock in stocks %} 
+        <tr>
+        <td>{{stock.name}}</p>
+        <td>{{stock.symbol}}</p>
+        <td class="currentprice" id="{{stock.id}}"></p>
+            <td><button class="addtowatch {{stock.id}} {{list.id}}"><i class="fa-solid fa-plus"></i></button></td>
+        </tr>
+        {% endfor %}
+        </table>
+    </div>
+    </div>
+    
+    {% endfor %}
+    
+</div>
+
+<form action='#'class='container addwatchlistform' method="post" >
+    {% csrf_token %} 
+    {{form.as_p}}
+    <input type="submit">
+</form>
+<div class="api"></div>
+<div class="container">
+   
+  </div>
+  <script>
+
+
+    document.addEventListener('DOMContentLoaded', function(){
+        document.querySelector('#menu1').addEventListener('click',function(){
+        if(document.querySelector('.men1').style.display == 'block'){
+            document.querySelector('.men1').style.display = 'none';  
+        }else{
+            document.querySelector('.men1').style.display = 'block'
+        }
+    })
+   
+    document.querySelectorAll('.menb1').forEach(button =>{
+        button.addEventListener('click', function(){
+            document.querySelector('.men1').style.display = 'none'
+            document.querySelectorAll('.card').forEach(card => {
+        if(card.id == button.id){
+            card.style.display='block';
+        }
+        else{
+            card.style.display='none';
+        }
+    })
+        })
+    })
+    let theform = document.querySelector('.addwatchlistform');   
+    let cardcont = document.querySelector('.cardcont');
+    document.querySelector('.addwatchlist').addEventListener('click', function(){    
+        if (theform.style.display == 'block'){
+           
+            theform.style.display = 'none';
+            cardcont.style.display = 'flex';
+        }
+        else{
+            theform.style.display = 'block';
+            cardcont.style.display = 'none';
+        }
+    })
+    var today = new Date();
+var dd = String(today.getDate()).padStart(2, '0');
+var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+var yyyy = today.getFullYear();
+
+today = yyyy + '-' + mm + '-' + dd;
+const date = new Date();
+
+let day = date.getDate();
+let month = date.getMonth() + 1;
+let year = date.getFullYear();
+
+// This arrangement can be altered based on how we want the date's format to appear.
+let currentDate = `${day}-${month}-${year}`;
+console.log(currentDate); // "17-6-2022"
+    document.querySelectorAll('.currentprice').forEach(price => {
+        fetch('/api/' + price.id) 
+     .then(response => response.json())
+     .then(data => {
+        let thevalues = Object.values(data)[0]
+        let eachvalue = Object.values(thevalues)[0]
+        let thelast = parseFloat(eachvalue.close)
+        let last = Object.values(thevalues)[Object.values(thevalues).length-1]
+        console.log(last.close)
+    price.innerHTML = Object.values(data.thecurrent)[0].current 
+    })}
+//     fetch(`https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=${price.id}&interval=5min&apikey=V1Q5DIF8U8SW5TNM`)
+//     .then(response => response.json())
+//     .then(data => {
+//         console.log(data)
+//         const thewanted = Object.values(data)[1]
+//         const thelast = Object.entries(thewanted)[0]
+//         // console.log(thelast)
+//         // console.log(data)
+//        for (const [key, value] of Object.entries(thelast)) {
+//         console.log(Object.values(value)[3])
+//         price.innerHTML = Object.values(value)[3]
+//  }
+
+
+//     })
+    
+ )
+    document.querySelectorAll('.addtowatch').forEach(button => {
+        button.addEventListener('click',function(){
+            fetch('/addstock/'+button.classList[1]+'/'+button.classList[2],{
+                method:'PUT',
+                body:JSON.stringify({
+                        add: true
+                    })
+            })
+            
+        })
+    })
+    document.querySelectorAll('.deletestock').forEach(button => {
+        button.addEventListener('click',function(){
+            fetch('/addstock/'+button.classList[1]+'/'+button.classList[2],{
+                method:'PUT',
+                body:JSON.stringify({
+                        delete: true
+                    })
+            })
+            
+        })
+    })
+    document.querySelectorAll('.listdelete').forEach(del => {
+        del.addEventListener('click',function(){
+            fetch('/addstock/'+0+'/'+del.classList[2],{
+                method:'PUT',
+                body:JSON.stringify({
+                        deletewatch: true
+                    })
+            })
+        })
+    })
+    document.querySelectorAll('.cardinfo').forEach(div =>{
+        div.querySelector('.listedit').addEventListener('click',function(){
+            console.log('edited')
+            let theeditform = div.querySelector('.editform')
+            if(theeditform.style.display == 'block'){
+            theeditform.style.display = 'none'}
+            else{
+                theeditform.style.display = 'block'
+            }
+        })
+    })
+    })
+
+    fetch('https://api.marketaux.com/v1/news/all?symbols=SBIN&filter_entities=true&language=en&api_token=yH6kipeuEJvp8I1KC15dWUwKicdsb58eCESpQ1Y8')
+    .then(response => response.json())
+     .then(data => {
+        console.log(data)
+     })
+  </script>
+
+{% endblock %}

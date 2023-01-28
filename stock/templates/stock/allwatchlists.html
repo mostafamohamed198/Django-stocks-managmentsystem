@@ -1,0 +1,9 @@
+{% extends "stock/layout.html" %}
+{% load static %}
+{% block body %}
+<div class="container">
+{% for watchlist in watchlists %}
+<h4><a href="{% url 'thewatchlist' watchlist.id %}">{{watchlist.name}}</a></h4>
+{% endfor %}
+</div>
+{% endblock %}
